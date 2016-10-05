@@ -8,7 +8,8 @@ public class CreatureController : MonoBehaviour
     private float feedLevel = 1.0f;
     private float age = 0;
     private float health = 1.0f;
-    private float breedThreshold = 30;
+    private float breedThreshold = 15;
+    private bool isDead = false;
 
     private int numInputs = 2;
     private int numOutputs = 5;
@@ -19,9 +20,15 @@ public class CreatureController : MonoBehaviour
 
     private GameObject creatureParent;
 
+    public event OnCreatureDeath creatureBorn;
+    public delegate void OnCreatureDeath();
+
+    public event OnCreatureBorn creatureDeath;
+    public delegate void OnCreatureBorn();
+
     public void Create()
     {
-        network = new NeuralNetwork(numInputs, numOutputs, numHiddenLayers, numNeurons);        
+        network = new NeuralNetwork(numInputs, numOutputs, numHiddenLayers, numNeurons);
     }
 
     public void Create(float[] genome)
@@ -52,7 +59,10 @@ public class CreatureController : MonoBehaviour
                 if (health > 0)
                     health -= 0.1f * Time.deltaTime;
                 else
+                {
                     health = 0;
+                    //creatureDeath();
+                }
             }
 
             if (feedLevel >= 0.7f)
@@ -64,7 +74,7 @@ public class CreatureController : MonoBehaviour
             }
 
             ProcessInput();
-        }
+        } 
     }
 
     /// <summary>
@@ -106,6 +116,8 @@ public class CreatureController : MonoBehaviour
 
             breedTimer = 0;
             feedLevel -= 0.2f;
+
+            //creatureBorn();
         }
     }
 }
