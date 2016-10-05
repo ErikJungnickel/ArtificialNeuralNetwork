@@ -2,7 +2,7 @@
 using System.Collections;
 
 public class Layer {
-    private Neuron[] neurons;
+    public Neuron[] neurons;
     public LayerType layerType;
     private int numNeurons;
 

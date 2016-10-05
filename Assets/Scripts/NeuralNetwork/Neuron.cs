@@ -4,7 +4,7 @@ using System;
 
 public class Neuron
 {
-    private float[] inputWeights;
+    public float[] inputWeights;
 
     public Neuron(int numInputs)
     {
@@ -16,7 +16,7 @@ public class Neuron
     {
         for (int i = 0; i < inputWeights.Length; i++)
         {
-            inputWeights[i] = UnityEngine.Random.value;
+            inputWeights[i] = UnityEngine.Random.Range(-1.0f, 1.0f);
         }
     }
 

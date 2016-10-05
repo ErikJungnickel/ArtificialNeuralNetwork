@@ -2,7 +2,7 @@
 using System.Collections;
 
 public class Spawner : MonoBehaviour {
-    public int numCreatures;
+    public int numCreatures;    
     public int numFoods;
 
     public GameObject Creature;
@@ -11,14 +11,20 @@ public class Spawner : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
+        var creatures = new GameObject("Creatures");
+        var foods = new GameObject("Foods");
+
         for (int i = 0; i < numCreatures; i++)
         {
-            Instantiate(Creature);
+            var creature = Instantiate(Creature);
+            creature.GetComponent<CreatureController>().Create();
+            creature.transform.parent = creatures.transform;
         }
 
         for (int i = 0; i < numFoods; i++)
         {
-            Instantiate(Food, new Vector3(Random.Range(-100, 100), Random.Range(-100, 100), 0), new Quaternion());
+            var food = Instantiate(Food, new Vector3(Random.Range(-100, 100), Random.Range(-100, 100), 0), new Quaternion());
+            ((GameObject)food).transform.parent = foods.transform;
         }
 	}
 	
