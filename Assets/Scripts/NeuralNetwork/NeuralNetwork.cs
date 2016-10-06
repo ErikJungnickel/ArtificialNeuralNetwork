@@ -26,10 +26,13 @@ public class NeuralNetwork
 
         for (int i = 0; i < numHiddenLayers; i++)
         {
-            layers.Add(new Layer(numNeurons, numInputs, LayerType.HIDDEN));
+            if(i == 0)
+                layers.Add(new Layer(numNeurons, numInputs, LayerType.HIDDEN));
+            else
+                layers.Add(new Layer(numNeurons, numNeurons, LayerType.HIDDEN));
         }
 
-        layers.Add(new Layer(numOutputs, numInputs, LayerType.OUTPUT));
+        layers.Add(new Layer(numOutputs, numNeurons, LayerType.OUTPUT));
     }
 
     /// <summary>

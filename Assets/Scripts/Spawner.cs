@@ -24,11 +24,11 @@ public class Spawner : MonoBehaviour {
             SpawnCreature();
         }
 
-        //for (int i = 0; i < numFoods; i++)
-        //{
-        //    var food = Instantiate(Food, new Vector3(Random.Range(-100, 100), Random.Range(-100, 100), 0), new Quaternion());
-        //    ((GameObject)food).transform.parent = foods.transform;
-        //}
+        for (int i = 0; i < numFoods; i++)
+        {
+            var food = Instantiate(Food, new Vector3(Random.Range(-100, 100), Random.Range(-100, 100), 0), new Quaternion());
+            ((GameObject)food).transform.parent = foods.transform;
+        }
 	}
 
     private void SpawnCreature()
