@@ -11,7 +11,7 @@ public class CreatureController : MonoBehaviour
     private float feedLevel = 1.0f;
     private float age = 0;
     private float health = 1.0f;
-    private float breedThreshold = 25;
+    private float breedThreshold = 40;
     private float proximityRadius = 2;
     private int generation = 1;
 
@@ -25,14 +25,19 @@ public class CreatureController : MonoBehaviour
     private GameObject creatureParent;
 
     public event OnCreatureDeath creatureBorn;
-    public delegate void OnCreatureDeath();
+    public delegate void OnCreatureDeath(float[] genome, int generation);
 
     public event OnCreatureBorn creatureDeath;
     public delegate void OnCreatureBorn();
 
+    public event OnFoodConsumed foodConsumed;
+    public delegate void OnFoodConsumed();
+
     private Material material;
 
     private Text infoText;
+    private float labelUpdate = 1;
+    private float labelTimer = 1;
 
     public void Create()
     {
@@ -69,6 +74,7 @@ public class CreatureController : MonoBehaviour
         if (health > 0)
         {
             breedTimer += Time.deltaTime;
+            labelTimer += Time.deltaTime;
 
             feedLevel -= 0.05f * Time.deltaTime;
 
@@ -77,8 +83,6 @@ public class CreatureController : MonoBehaviour
             if (feedLevel == 0)
             {
                 health -= 0.02f * Time.deltaTime;
-
-                //creatureDeath();
             }
             if (feedLevel > 2f)
             {
@@ -105,10 +109,17 @@ public class CreatureController : MonoBehaviour
             else
                 material.color = Color.black;
 
-            SetLabel();
+            if (labelTimer >= labelUpdate)
+            {
+                SetLabel();
+                labelTimer = 0;
+            }
         }
         else
+        {
+            creatureDeath();
             GameObject.Destroy(this);
+        }
     }
 
     /// <summary>
@@ -173,6 +184,8 @@ public class CreatureController : MonoBehaviour
             GameObject.Destroy(food.gameObject);
             feedLevel += 0.2f;
             health += 0.05f;
+
+            foodConsumed();
         }
     }
 
@@ -182,14 +195,10 @@ public class CreatureController : MonoBehaviour
         {
             var genome = network.GetGenome();
 
-            var sibling = Instantiate(this);
-            sibling.Create(genome, generation);
-            sibling.transform.parent = creatureParent.transform;
-
             breedTimer = 0;
-            feedLevel -= 0.2f;
+            feedLevel -= 0.3f;
 
-            //creatureBorn();
+            creatureBorn(genome, generation);
         }
     }
 }
