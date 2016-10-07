@@ -13,22 +13,23 @@ public class CreatureController : MonoBehaviour
     private float health = 1.0f;
     private float breedThreshold = 90;
     private float proximityRadius = 2;
-    private int generation = 1;
+    [HideInInspector]
+    public int generation = 1;
 
-    private int numInputs = 3;
+    private int numInputs = 6;
     private int numOutputs = 6;
     private int numHiddenLayers = 1;
-    private int numNeurons = 4;
+    private int numNeurons = 6;
 
     private float breedTimer;
 
     private GameObject creatureParent;
 
-    public event OnCreatureDeath creatureBorn;
-    public delegate void OnCreatureDeath(float[] genome, int generation);
+    public event OnCreatureBorn creatureBorn;
+    public delegate void OnCreatureBorn(float[] genome, int generation);
 
-    public event OnCreatureBorn creatureDeath;
-    public delegate void OnCreatureBorn();
+    public event OnCreatureDeath creatureDeath;
+    public delegate void OnCreatureDeath(GameObject go);
 
     public event OnFoodConsumed foodConsumed;
     public delegate void OnFoodConsumed();
@@ -38,6 +39,9 @@ public class CreatureController : MonoBehaviour
     private Text infoText;
     private float labelUpdate = 1;
     private float labelTimer = 1;
+
+    private Vector3 lookAt;
+    private Vector3 closestFood;
 
     public void Create()
     {
@@ -64,6 +68,7 @@ public class CreatureController : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+      
         creatureParent = GameObject.Find("Creatures");
         material = this.GetComponent<Renderer>().material;
     }
@@ -117,8 +122,7 @@ public class CreatureController : MonoBehaviour
         }
         else
         {
-            creatureDeath();
-            GameObject.Destroy(this.gameObject);
+            creatureDeath(this.gameObject);            
         }
     }
 
@@ -139,7 +143,33 @@ public class CreatureController : MonoBehaviour
         float[] inputs = new float[numInputs];
         inputs[0] = feedLevel;
         inputs[1] = health;
-        inputs[2] = GetProximity();
+        //lookAt = transform.position + transform.forward; 
+        
+        inputs[2] = transform.position.x;
+        inputs[3] = transform.position.y;
+
+        //inputs[2] = GetProximity();
+        var foods = GameObject.FindGameObjectsWithTag("Food");
+
+        GameObject closest = null;
+        float distance = Mathf.Infinity;
+        Vector3 position = transform.position;
+        foreach (GameObject go in foods)
+        {
+            Vector3 diff = go.transform.position - position;
+            float curDistance = diff.sqrMagnitude;
+            if (curDistance < distance)
+            {
+                closest = go;
+                distance = curDistance;
+            }
+        }
+
+        //closestFood = closest.transform.position - position;
+        closestFood = closest.transform.position;
+
+        inputs[4] = closestFood.x;
+        inputs[5] = closestFood.y;
 
         float[] output = network.GetOutput(inputs);
 
@@ -156,22 +186,25 @@ public class CreatureController : MonoBehaviour
         }
     }
 
-    private int GetProximity()
-    {
-        var colliders = Physics.OverlapSphere(this.transform.position, proximityRadius);
-        if (colliders.Any(c => c.tag.Equals("Food")))
-            return 1;
-        else if (colliders.Any(c => c.tag.Equals("Creature") && c.gameObject != this.gameObject))
-        {
-            return -1;
-        }
-        else
-            return 0;
-    }
+    
+    //private int GetProximity()
+    //{
+    //    var colliders = Physics.OverlapSphere(this.transform.position, proximityRadius);
+    //    if (colliders.Any(c => c.tag.Equals("Food")))
+    //        return 1;
+    //    else if (colliders.Any(c => c.tag.Equals("Creature") && c.gameObject != this.gameObject))
+    //    {
+    //        return -1;
+    //    }
+    //    else
+    //        return 0;
+    //}
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawWireSphere(this.transform.position, proximityRadius);        
+        Gizmos.DrawWireSphere(this.transform.position, proximityRadius);       
+        
+        Gizmos.DrawLine(transform.position, closestFood);
     }
 
     private void Eat()
@@ -187,6 +220,8 @@ public class CreatureController : MonoBehaviour
 
             foodConsumed();
         }
+        //else
+        //    health -= 0.05f;
     }
 
     private void Breed()

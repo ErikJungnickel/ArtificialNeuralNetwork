@@ -36,6 +36,7 @@ public class Neuron
 
     private float Sigmoid(float x)
     {
-        return (float)(2 / (1 + Math.Exp(-2 * x)) - 1);
+        //return (float)(2 / (1 + Math.Exp(-2 * x)) - 1);
+        return (float)(1 / (1 + Math.Exp(-x / 1)));
     }
 }
