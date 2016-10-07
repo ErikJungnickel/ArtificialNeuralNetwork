@@ -74,6 +74,14 @@ public class Spawner : MonoBehaviour {
         population--;
 
         SetLabel();
+	
+	if(population < numCreatures){
+		var creature = SpawnCreature();
+        	creature.GetComponent<CreatureController>().Create();
+        	population++;
+
+        	SetLabel();
+	}
     }
 
     void Spawner_creatureBorn(float[] genome, int generation)
