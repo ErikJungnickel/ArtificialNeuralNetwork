@@ -11,7 +11,7 @@ public class CreatureController : MonoBehaviour
     private float feedLevel = 1.0f;
     private float age = 0;
     private float health = 1.0f;
-    private float breedThreshold = 40;
+    private float breedThreshold = 90;
     private float proximityRadius = 2;
     private int generation = 1;
 
