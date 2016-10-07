@@ -14,7 +14,8 @@ public class Spawner : MonoBehaviour {
 
     private GameObject creatureParent;
     private GameObject foodParent;
-
+    private int highestGen = 1;
+	
     private Text globalStats;
 
 	// Use this for initialization
@@ -68,6 +69,7 @@ public class Spawner : MonoBehaviour {
     private void SetLabel()
     {
         globalStats.text = "Pop: " + population;
+	globalStats.text += "\nHighest Gen: " + highestGen;
     }
     void Spawner_creatureDeath()
     {
@@ -86,6 +88,9 @@ public class Spawner : MonoBehaviour {
 
     void Spawner_creatureBorn(float[] genome, int generation)
     {
+	if(generation+1 > highestGen){
+		highestGen = generation+1;
+	}
         var creature = SpawnCreature();
         creature.GetComponent<CreatureController>().Create(genome, generation);
         population++;
