@@ -118,7 +118,7 @@ public class CreatureController : MonoBehaviour
         else
         {
             creatureDeath();
-            GameObject.Destroy(this);
+            GameObject.Destroy(this.gameObject);
         }
     }
 
