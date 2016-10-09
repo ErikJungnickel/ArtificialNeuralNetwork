@@ -11,7 +11,7 @@ public class NeuralNetwork
     private int numInputs;
     private int numOutputs;
 
-    private float mutationRate = 0.05f;
+    private float mutationRate = 0.02f;
 
     private List<Layer> layers;
 
@@ -43,9 +43,9 @@ public class NeuralNetwork
     /// <param name="numHiddenLayers"></param>
     /// <param name="numNeurons"></param>
     /// <param name="genome"></param>
-    public NeuralNetwork(int numInputs, int numOutputs, int numHiddenLayers, int numNeurons, float[] genome)
+    public NeuralNetwork(int numInputs, int numOutputs, int numHiddenLayers, int numNeurons, float[] genomeFather, float[] genomeMother)
         : this(numInputs, numOutputs, numHiddenLayers, numNeurons)
-    {
+    {  
         int genomeCounter = 0;
 
         foreach (Layer layer in layers)
@@ -53,14 +53,22 @@ public class NeuralNetwork
             foreach (Neuron neuron in layer.neurons)
             {
                 for (int i = 0; i < neuron.inputWeights.Length; i++)
-                {                    
-                    float mutation = Random.Range(-mutationRate, mutationRate);
-                    neuron.inputWeights[i] = genome[genomeCounter] + mutation;
+                {
+                    float genome = Random.value >= 0.5f ? genomeFather[genomeCounter] : genomeMother[genomeCounter];
 
-                    if (neuron.inputWeights[i] > 1)
-                        neuron.inputWeights[i] = 1;
-                    if(neuron.inputWeights[i] < -1)
-                        neuron.inputWeights[i] = -1;
+                    neuron.inputWeights[i] = genome;
+
+                    if (Random.value >= 0.5f)
+                    {
+                        float mutation = Random.Range(-mutationRate, mutationRate);
+
+                        neuron.inputWeights[i] += mutation;
+
+                        if (neuron.inputWeights[i] > 1)
+                            neuron.inputWeights[i] = 1;
+                        if (neuron.inputWeights[i] < -1)
+                            neuron.inputWeights[i] = -1;
+                    }
 
                     genomeCounter++;
                 }

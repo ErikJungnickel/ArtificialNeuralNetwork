@@ -8,28 +8,28 @@ public class CreatureController : MonoBehaviour
 {
     private NeuralNetwork network;
 
-    private float feedLevel = 1.0f;
-    private float age = 0;
-    private float health = 1.0f;
-    private float breedThreshold = 90;
-    private float proximityRadius = 2;
+    //private float feedLevel = 1.0f;
+    //private float age = 0;
+    //private float health = 1.0f;
+    //private float breedThreshold = 120;
     [HideInInspector]
-    public int generation = 1;
+    public int fitness = 0;
+    private float proximityRadius = 2;    
 
-    private int numInputs = 6;
+    private int numInputs = 4;
     private int numOutputs = 6;
-    private int numHiddenLayers = 1;
+    private int numHiddenLayers = 2;
     private int numNeurons = 6;
 
-    private float breedTimer;
+    //private float breedTimer;
 
     private GameObject creatureParent;
 
-    public event OnCreatureBorn creatureBorn;
-    public delegate void OnCreatureBorn(float[] genome, int generation);
+    //public event OnCreatureBorn creatureBorn;
+    //public delegate void OnCreatureBorn(float[] genome, int generation);
 
-    public event OnCreatureDeath creatureDeath;
-    public delegate void OnCreatureDeath(GameObject go);
+    //public event OnCreatureDeath creatureDeath;
+    //public delegate void OnCreatureDeath(GameObject go);
 
     public event OnFoodConsumed foodConsumed;
     public delegate void OnFoodConsumed();
@@ -49,10 +49,9 @@ public class CreatureController : MonoBehaviour
         SetLabel();
     }
 
-    public void Create(float[] genome, int generation)
-    {
-        this.generation = generation + 1;        
-        network = new NeuralNetwork(numInputs, numOutputs, numHiddenLayers, numNeurons, genome);
+    public void Create(float[] genomeFather, float[] genomeMother)
+    {        
+        network = new NeuralNetwork(numInputs, numOutputs, numHiddenLayers, numNeurons, genomeFather, genomeMother);
         SetLabel();
     }
 
@@ -61,14 +60,13 @@ public class CreatureController : MonoBehaviour
         if (infoText == null)
             infoText = this.GetComponentInChildren<Text>();
 
-        infoText.text = "Gen: " + this.generation;
-        infoText.text += "\nFood: " + Math.Round(this.feedLevel, 2);
-        infoText.text += "\nHealth: " + Math.Round(this.health, 2);
+        infoText.text = "Fitness " + this.fitness;
     }
+
     // Use this for initialization
     void Start()
     {
-      
+
         creatureParent = GameObject.Find("Creatures");
         material = this.GetComponent<Renderer>().material;
     }
@@ -76,59 +74,59 @@ public class CreatureController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (health > 0)
+        //if (health > 0)
+        //{
+        //breedTimer += Time.deltaTime;
+        labelTimer += Time.deltaTime;
+
+        //feedLevel -= 0.05f * Time.deltaTime;
+
+        //feedLevel = Mathf.Clamp(feedLevel, 0, 1);
+
+        //if (feedLevel == 0)
+        //{
+        //    health -= 0.02f * Time.deltaTime;
+        //}
+        //if (feedLevel > 2f)
+        //{
+        //    //Vomit
+        //    feedLevel = 0.3f;
+        //    health -= 0.1f;
+        //}
+
+        //if (feedLevel >= 0.7f)
+        //{
+        //    health += 0.05f * Time.deltaTime;
+        //}
+
+        //health = Mathf.Clamp(health, 0, 1);
+
+        ProcessInput();
+
+        //if (health >= 0.8f)
+        //    material.color = Color.green;
+        //else if (health >= 0.5f)
+        //    material.color = Color.yellow;
+        //else if (health > 0)
+        //    material.color = Color.red;
+        //else
+        //    material.color = Color.black;
+
+        if (labelTimer >= labelUpdate)
         {
-            breedTimer += Time.deltaTime;
-            labelTimer += Time.deltaTime;
-
-            feedLevel -= 0.05f * Time.deltaTime;
-
-            feedLevel = Mathf.Clamp(feedLevel, 0, 10);
-
-            if (feedLevel == 0)
-            {
-                health -= 0.02f * Time.deltaTime;
-            }
-            if (feedLevel > 2f)
-            {
-                //Vomit
-                feedLevel = 0.3f;
-                health -= 0.1f;
-            }
-
-            if (feedLevel >= 0.7f)
-            {
-                health += 0.05f * Time.deltaTime;
-            }
-
-            health = Mathf.Clamp(health, 0, 1);
-
-            ProcessInput();
-
-            if (health >= 0.8f)
-                material.color = Color.green;
-            else if (health >= 0.5f)
-                material.color = Color.yellow;
-            else if (health > 0)
-                material.color = Color.red;
-            else
-                material.color = Color.black;
-
-            if (labelTimer >= labelUpdate)
-            {
-                SetLabel();
-                labelTimer = 0;
-            }
+            SetLabel();
+            labelTimer = 0;
         }
-        else
-        {
-            creatureDeath(this.gameObject);            
-        }
+        //}
+        //else
+        //{
+        //    creatureDeath(this.gameObject);
+        //}
     }
 
     /// <summary>
     /// Output:
-    /// 0&1 - rotation
+    /// 0&1 - lookat
     /// 2&3 - movement
     /// 4 - breed
     /// 5 - eat
@@ -141,12 +139,13 @@ public class CreatureController : MonoBehaviour
     private void ProcessInput()
     {
         float[] inputs = new float[numInputs];
-        inputs[0] = feedLevel;
-        inputs[1] = health;
-        //lookAt = transform.position + transform.forward; 
-        
-        inputs[2] = transform.position.x;
-        inputs[3] = transform.position.y;
+        //inputs[0] = feedLevel;
+        //inputs[1] = health;
+
+        lookAt = (transform.forward).normalized;
+
+        inputs[0] = lookAt.x;
+        inputs[1] = lookAt.y;
 
         //inputs[2] = GetProximity();
         var foods = GameObject.FindGameObjectsWithTag("Food");
@@ -165,28 +164,34 @@ public class CreatureController : MonoBehaviour
             }
         }
 
-        //closestFood = closest.transform.position - position;
-        closestFood = closest.transform.position;
+        closestFood = (closest.transform.position - position).normalized;
 
-        inputs[4] = closestFood.x;
-        inputs[5] = closestFood.y;
+        inputs[2] = closestFood.x;
+        inputs[3] = closestFood.y;
 
         float[] output = network.GetOutput(inputs);
 
-        transform.Rotate(new Vector3(0, (output[0] - output[1]) * Time.deltaTime * 100, 0));
-        transform.Translate(new Vector3(0, 0, (output[2] - output[3]) * Time.deltaTime * 10));
-
+        //transform.Rotate(new Vector3(0, (output[0] - output[1]), 0) * Time.deltaTime * 10);
         if (output[4] >= 0.5f)
-        {
-            Breed();
-        }
+            output[0] *= -1;
         if (output[5] >= 0.5f)
-        {
-            Eat();
-        }
+            output[1] *= -1;
+        transform.LookAt(transform.position + new Vector3(output[0], 0, output[1]) * Time.deltaTime);
+        transform.Translate(new Vector3(0, 0, (output[2] - output[3]) * Time.deltaTime*10));
+
+        //if (output[4] >= 0.5f)
+        //{
+        //    Breed();
+        //}
+        //if (output[5] >= 0.5f)
+        //{
+        //    Eat();
+        //}
+        Eat();
+        //Breed();
     }
 
-    
+
     //private int GetProximity()
     //{
     //    var colliders = Physics.OverlapSphere(this.transform.position, proximityRadius);
@@ -202,21 +207,26 @@ public class CreatureController : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawWireSphere(this.transform.position, proximityRadius);       
-        
-        Gizmos.DrawLine(transform.position, closestFood);
+        Gizmos.DrawWireSphere(this.transform.position, proximityRadius);
+
+        Gizmos.DrawLine(transform.position, (transform.position + lookAt));
+        Gizmos.DrawLine(transform.position, (transform.position + closestFood));
     }
 
     private void Eat()
-    {       
+    {
         var colliders = Physics.OverlapSphere(this.transform.position, proximityRadius);
 
         var food = colliders.FirstOrDefault(c => c.tag.Equals("Food"));
         if (food != null)
         {
             GameObject.Destroy(food.gameObject);
-            feedLevel += 0.2f;
-            health += 0.05f;
+            fitness++;
+            //feedLevel += 0.5f;
+            //health += 0.1f;
+
+            //feedLevel = Mathf.Clamp(feedLevel, 0, 1);
+            //health = Mathf.Clamp(health, 0, 1);
 
             foodConsumed();
         }
@@ -224,16 +234,23 @@ public class CreatureController : MonoBehaviour
         //    health -= 0.05f;
     }
 
-    private void Breed()
+    public float[] GetGenome()
     {
-        if (breedTimer >= breedThreshold)
-        {
-            var genome = network.GetGenome();
-
-            breedTimer = 0;
-            feedLevel -= 0.3f;
-
-            creatureBorn(genome, generation);
-        }
+        return network.GetGenome();
     }
+
+    //private void Breed()
+    //{
+    //    if (breedTimer >= breedThreshold)
+    //    {
+    //        var genome = network.GetGenome();
+
+    //        breedTimer = 0;
+    //        //feedLevel -= 0.2f;
+
+    //        //feedLevel = Mathf.Clamp(feedLevel, 0, 1);
+
+    //        creatureBorn(genome, generation);
+    //    }
+    //}
 }
