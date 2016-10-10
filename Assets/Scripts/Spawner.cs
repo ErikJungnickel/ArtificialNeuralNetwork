@@ -26,7 +26,7 @@ public class Spawner : MonoBehaviour
     public List<CreatureController> creatures;
 
     private float genTimer;
-    private float genThreshold = 120;
+    private float genThreshold = 180;
 
     private float currentGeneration = 1;
 
@@ -59,7 +59,7 @@ public class Spawner : MonoBehaviour
 
     private GameObject SpawnCreature()
     {
-        var creature = Instantiate(Creature, new Vector3(UnityEngine.Random.Range(-100, 100), 0, UnityEngine.Random.Range(-100, 100)), Creature.transform.rotation);
+        var creature = Instantiate(Creature, new Vector3(UnityEngine.Random.Range(0, 200), 0, UnityEngine.Random.Range(0, 200)), Creature.transform.rotation);
         //((GameObject)creature).GetComponent<CreatureController>().creatureBorn += Spawner_creatureBorn;
         //((GameObject)creature).GetComponent<CreatureController>().creatureDeath += Spawner_creatureDeath;
         ((GameObject)creature).GetComponent<CreatureController>().foodConsumed += Spawner_foodConsumed;
@@ -72,7 +72,7 @@ public class Spawner : MonoBehaviour
 
     private void SpawnFood()
     {
-        var food = Instantiate(Food, new Vector3(UnityEngine.Random.Range(-100, 100), 0, UnityEngine.Random.Range(-100, 100)), new Quaternion());
+        var food = Instantiate(Food, new Vector3(UnityEngine.Random.Range(0, 200), 0, UnityEngine.Random.Range(0, 200)), new Quaternion());
         ((GameObject)food).transform.parent = foodParent.transform;
     }
 
@@ -133,7 +133,12 @@ public class Spawner : MonoBehaviour
         SetLabel();
 
         genTimer += Time.deltaTime;
-
+        if (!creatures.Any(c => c.feedLevel > 0))
+        {
+            CreateNewGeneration();
+            genTimer = 0;
+            return;
+        }
         if (genTimer >= genThreshold)
         {
             CreateNewGeneration();
@@ -155,8 +160,16 @@ public class Spawner : MonoBehaviour
 
         //get fittest  two creatures
         var orderedCreatures = creatures.OrderByDescending(c => c.fitness).ToList();
-        var father = orderedCreatures[0];
-        var mother = orderedCreatures[1];
+        //Get the numCreatures/4 fittest 
+        var fittest = new List<CreatureController>();
+        for (int i = 0; i < numCreatures / 4; i++)
+        {
+            var creatureToAdd = orderedCreatures[i];
+            fittest.Add(orderedCreatures[i]);
+        }
+
+        //var father = orderedCreatures[0];
+        //var mother = orderedCreatures[1];
 
         //List<CreatureController> fittest = new List<CreatureController>();
         //for (int i = 0; i < 2; i++)
@@ -169,24 +182,39 @@ public class Spawner : MonoBehaviour
         creatures.ForEach(c => Destroy(c.gameObject));
         creatures.Clear();
 
-        if (!orderedCreatures.Any(c => c.fitness > 0))
+        int creatureCount = 0;
+
+        do
         {
-            for (int i = 0; i < numCreatures; i++)
-            {
-                var creature = SpawnCreature();
-                creature.GetComponent<CreatureController>().Create();
-            }
-        }
-        else
-        {
-            int creatureCount = 0;
-            do
-            {
-                var creatureGo = SpawnCreature();
-                creatureGo.GetComponent<CreatureController>().Create(father.GetGenome(), mother.GetGenome());
-                creatureCount++;
-            } while (creatureCount < numCreatures);
-        }
+            var creatureGo = SpawnCreature();
+
+            var father = fittest[UnityEngine.Random.Range(0, fittest.Count)];
+            var mother = fittest[UnityEngine.Random.Range(0, fittest.Count)];
+
+            creatureGo.GetComponent<CreatureController>().Create(father.GetGenome(), mother.GetGenome());
+
+            creatureCount++;
+        } while (creatureCount < numCreatures);
+
+        //    } while (creatureCount < numCreatures);
+        //if (!orderedCreatures.Any(c => c.fitness > 0))
+        //{
+        //    for (int i = 0; i < numCreatures; i++)
+        //    {
+        //        var creature = SpawnCreature();
+        //        creature.GetComponent<CreatureController>().Create();
+        //    }
+        //}
+        //else
+        //{
+
+        //    do
+        //    {
+        //        var creatureGo = SpawnCreature();
+        //        creatureGo.GetComponent<CreatureController>().Create(father.GetGenome(), mother.GetGenome());
+        //        creatureCount++;
+        //    } while (creatureCount < numCreatures);
+        //}
 
         this.currentGeneration++;
     }

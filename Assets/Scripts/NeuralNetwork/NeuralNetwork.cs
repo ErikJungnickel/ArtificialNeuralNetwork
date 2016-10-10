@@ -11,7 +11,7 @@ public class NeuralNetwork
     private int numInputs;
     private int numOutputs;
 
-    private float mutationRate = 0.02f;
+    private float mutationRate = 0.1f;
 
     private List<Layer> layers;
 
@@ -96,6 +96,10 @@ public class NeuralNetwork
 
     public float[] GetOutput(float[] input)
     {
+        if (input.Any(i => i < -1 || i > 1))
+        {
+            Debug.LogError("input not normalized");
+        }
         float[] output = new float[numOutputs];
 
         List<float> inputs = new List<float>(input);
