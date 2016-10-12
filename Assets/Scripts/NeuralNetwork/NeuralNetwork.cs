@@ -11,7 +11,7 @@ public class NeuralNetwork
     private int numInputs;
     private int numOutputs;
 
-    private float mutationRate = 0.1f;
+    private float mutationRate = 0.05f;
 
     private List<Layer> layers;
 

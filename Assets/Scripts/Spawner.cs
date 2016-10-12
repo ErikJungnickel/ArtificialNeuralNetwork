@@ -29,10 +29,13 @@ public class Spawner : MonoBehaviour
     private float genThreshold = 180;
 
     private float currentGeneration = 1;
+    private List<float> avgFitnesses;
 
     // Use this for initialization
     void Start()
     {
+        avgFitnesses = new List<float>();
+
         creatures = new List<CreatureController>();
 
         globalStats = GetComponentInChildren<Text>();
@@ -85,8 +88,9 @@ public class Spawner : MonoBehaviour
     private void SetLabel()
     {
         globalStats.text = "Gen: " + currentGeneration;
+        globalStats.text += "\nTotal Avg Fitness: " + (avgFitnesses.Any() ? Math.Round(avgFitnesses.Average(), 2) : 0);
         globalStats.text += "\nHighest Fitness: " + creatures.Select(c => c.fitness).ToList().Max();
-        globalStats.text += "\nMedian Fitness: " + Math.Round(creatures.Select(c => c.fitness).ToList().Average(), 2);
+        globalStats.text += "\nAvg Fitness: " + Math.Round(creatures.Select(c => c.fitness).ToList().Average(), 2);
         globalStats.text += "\nSpeed: " + Time.timeScale;
 
         //globalStats.text = "Pop: " + population;
@@ -133,7 +137,7 @@ public class Spawner : MonoBehaviour
         SetLabel();
 
         genTimer += Time.deltaTime;
-        if (!creatures.Any(c => c.feedLevel > 0))
+        if (!creatures.Any(c => c.feedLevel > -1 && c.feedLevel < 1))
         {
             CreateNewGeneration();
             genTimer = 0;
@@ -178,6 +182,7 @@ public class Spawner : MonoBehaviour
         //}
 
         Debug.Log("Gen " + currentGeneration + " : Highest: " + orderedCreatures[0].fitness + " Median: " + Math.Round(creatures.Select(c => c.fitness).ToList().Average(), 2));
+        avgFitnesses.Add((float)creatures.Select(c => c.fitness).ToList().Average());
 
         creatures.ForEach(c => Destroy(c.gameObject));
         creatures.Clear();

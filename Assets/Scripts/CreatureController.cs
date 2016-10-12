@@ -9,7 +9,7 @@ public class CreatureController : MonoBehaviour
     private NeuralNetwork network;
 
     [HideInInspector]
-    public float feedLevel = 1.0f;
+    public float feedLevel;
 
     //private float health = 1.0f;
     //private float breedThreshold = 120;
@@ -18,7 +18,7 @@ public class CreatureController : MonoBehaviour
 
     private float proximityRadius = 2;
 
-    private int numInputs = 4;
+    private int numInputs = 7;
     private int numOutputs = 4;
     private int numHiddenLayers = 1;
     private int numNeurons = 6;
@@ -72,16 +72,17 @@ public class CreatureController : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-
+        feedLevel = 0;
         creatureParent = GameObject.Find("Creatures");
         material = this.GetComponent<Renderer>().material;
     }
 
     // Update is called once per frame
     void Update()
-    {
-        if (feedLevel > 0)
+    {        
+        if (feedLevel > -1.0f && feedLevel < 1.0f)
         {
+            
             tickTimer += Time.deltaTime;
             if (tickTimer >= tick)
             {
@@ -91,7 +92,7 @@ public class CreatureController : MonoBehaviour
 
             feedLevel -= 0.05f * Time.deltaTime;
 
-            feedLevel = Mathf.Clamp(feedLevel, 0, 1);
+            feedLevel = Mathf.Clamp(feedLevel, -1, 1);
 
             ProcessInput();
 
@@ -103,11 +104,32 @@ public class CreatureController : MonoBehaviour
                 labelTimer = 0;
             }
 
-            if (feedLevel >= 0.8f)
+            if (transform.position.x >= 225)
+            {
+                //transform.position = new Vector3(-49, transform.position.y, transform.position.z);
+                feedLevel = -1;
+            }
+            if (transform.position.x <= -25)
+            {
+                //transform.position = new Vector3(249, transform.position.y, transform.position.z);
+                feedLevel = -1;
+            }
+            if (transform.position.z >= 225)
+            {
+                //transform.position = new Vector3(transform.position.x, transform.position.y, -49);
+                feedLevel = -1;
+            }
+            if (transform.position.z <= -25)
+            {
+                feedLevel = -1;
+                //transform.position = new Vector3(transform.position.x, transform.position.y, 249);
+            }
+
+            if (feedLevel >= -0.2f && feedLevel <= 0.2)
                 material.color = Color.green;
-            else if (feedLevel >= 0.5f)
+            else if (feedLevel >= -0.5f && feedLevel <= 0.5)
                 material.color = Color.yellow;
-            else if (feedLevel > 0)
+            else if (feedLevel > -1 && feedLevel < 1)
                 material.color = Color.red;
             else
                 material.color = Color.black;
@@ -170,15 +192,20 @@ public class CreatureController : MonoBehaviour
         //float posx = (transform.position.x - (-1)) / (300 - (-1));
         //float posy = (transform.position.y - (-1)) / (300 - (-1));
 
-        //inputs[4] = posx;
-        //inputs[5] = posy;
+        float posx = -1 + (2 * (transform.position.x + 25) / 250);
+        float posy = -1 + (2 * (transform.position.y + 25) / 250);
+
+        inputs[4] = posx;
+        inputs[5] = posy;
+
+        inputs[6] = feedLevel;
 
         float[] output = network.GetOutput(inputs);
 
         //transform.Rotate(new Vector3(0, (output[0] - output[1]), 0) * Time.deltaTime * 10);
 
-        output[0] = (2*output[0]) - 1;
-        output[1] = (2*output[1]) - 1;
+        output[0] = (2 * output[0]) - 1;
+        output[1] = (2 * output[1]) - 1;
 
         transform.LookAt(transform.position + new Vector3(output[0], 0, output[1]) * Time.deltaTime);
         transform.Translate(new Vector3(0, 0, (output[2] - output[3])) * Time.deltaTime * 10);
@@ -226,10 +253,10 @@ public class CreatureController : MonoBehaviour
         {
             GameObject.Destroy(food.gameObject);
             //fitness++;
-            feedLevel += 0.5f;
+            feedLevel += 0.3f;
             //health += 0.1f;
 
-            feedLevel = Mathf.Clamp(feedLevel, 0, 1);
+            feedLevel = Mathf.Clamp(feedLevel, -1, 1);
             //health = Mathf.Clamp(health, 0, 1);
 
             foodConsumed();
