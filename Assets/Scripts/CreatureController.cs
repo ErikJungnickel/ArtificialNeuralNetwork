@@ -87,7 +87,7 @@ public class CreatureController : MonoBehaviour
             if (tickTimer >= tick)
             {
                 tickTimer = 0;
-                fitness++;
+                fitness += 1 * Time.deltaTime;
             }
 
             feedLevel -= 0.05f * Time.deltaTime;
