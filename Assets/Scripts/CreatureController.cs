@@ -14,7 +14,7 @@ public class CreatureController : MonoBehaviour
     //private float health = 1.0f;
     //private float breedThreshold = 120;
     [HideInInspector]
-    public int fitness = 0;
+    public float fitness = 0;
 
     private float proximityRadius = 2;
 
