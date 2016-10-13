@@ -88,8 +88,8 @@ public class Spawner : MonoBehaviour
     private void SetLabel()
     {
         globalStats.text = "Gen: " + currentGeneration;
-        globalStats.text += "\nTotal Avg Fitness: " + (avgFitnesses.Any() ? Math.Round(avgFitnesses.Average(), 2) : 0);
-        globalStats.text += "\nHighest Fitness: " + creatures.Select(c => c.fitness).ToList().Max();
+        globalStats.text += "\nTotal Avg Fitness: " + Math.Round((avgFitnesses.Any() ? Math.Round(avgFitnesses.Average(), 2) : 0), 2);
+        globalStats.text += "\nHighest Fitness: " + Math.Round(creatures.Select(c => c.fitness).ToList().Max(),2);
         globalStats.text += "\nAvg Fitness: " + Math.Round(creatures.Select(c => c.fitness).ToList().Average(), 2);
         globalStats.text += "\nSpeed: " + Time.timeScale;
 
