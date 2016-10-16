@@ -4,41 +4,12 @@ using System.Linq;
 using UnityEngine.UI;
 using System;
 
-public class CreatureController : MonoBehaviour
+public class CreatureController : BaseController
 {
-    [HideInInspector]
-    public NeuralNetwork network;
-
-    [HideInInspector]
-    public float feedLevel;
-
     [HideInInspector]
     public bool isDead;
 
-    //private float health = 1.0f;
-    //private float breedThreshold = 120;
-    [HideInInspector]
-    public float fitness = 0;
-
     private float proximityRadius = 2;
-
-    private int numInputs = 11;
-    private int numOutputs = 5;
-    private int numHiddenLayers = 1;
-    private int numNeurons = 8;
-
-    //private float breedTimer;
-
-    private GameObject creatureParent;
-
-    //public event OnCreatureBorn creatureBorn;
-    //public delegate void OnCreatureBorn(float[] genome, int generation);
-
-    //public event OnCreatureDeath creatureDeath;
-    //public delegate void OnCreatureDeath(GameObject go);
-
-    public event OnFoodConsumed foodConsumed;
-    public delegate void OnFoodConsumed();
 
     private Material material;
 
@@ -52,35 +23,19 @@ public class CreatureController : MonoBehaviour
     private Vector3 lookAt;
     private Vector3 closestFood;
     private Vector3 closestCreature;
+    
+    void Awake()
+    {        
+        numInputs = 11;
+        numOutputs = 5;
+        numHiddenLayers = 1;
+        numNeurons = 8;
 
-    public void Create()
-    {
-        network = new NeuralNetwork(numInputs, numOutputs, numHiddenLayers, numNeurons);
-        SetLabel();
-    }
-
-    public void Create(float[] genomeFather, float[] genomeMother)
-    {
-        network = new NeuralNetwork(numInputs, numOutputs, numHiddenLayers, numNeurons, genomeFather, genomeMother);
-        SetLabel();
-    }
-
-    private void SetLabel()
-    {
-        //if (infoText == null)
-        //    infoText = this.GetComponentInChildren<Text>();
-
-        //infoText.text = "Fitness " + this.fitness;
-        //infoText.text += "\nFeed " + Math.Round(this.feedLevel, 2);
-    }
-
-    // Use this for initialization
-    void Start()
-    {
         feedLevel = 0;
+
+        attacked = false;
         isDead = false;
-        creatureParent = GameObject.Find("Creatures");
-        material = this.GetComponent<Renderer>().material;
+        material = this.GetComponent<Renderer>().material;        
     }
 
     // Update is called once per frame
@@ -88,7 +43,6 @@ public class CreatureController : MonoBehaviour
     {
         if (feedLevel > -1.0f && feedLevel < 1.0f)
         {
-
             tickTimer += Time.deltaTime;
             if (tickTimer >= tick)
             {
@@ -98,37 +52,30 @@ public class CreatureController : MonoBehaviour
 
             feedLevel -= 0.05f * Time.deltaTime;
 
-            feedLevel = Mathf.Clamp(feedLevel, -1, 1);
-
             ProcessInput();
 
             labelTimer += Time.deltaTime;
 
             if (labelTimer >= labelUpdate)
-            {
-                SetLabel();
+            {              
                 labelTimer = 0;
             }
 
             if (transform.position.x >= 225)
             {
-                //transform.position = new Vector3(-49, transform.position.y, transform.position.z);
                 feedLevel = -1;
             }
             if (transform.position.x <= -25)
             {
-                //transform.position = new Vector3(249, transform.position.y, transform.position.z);
                 feedLevel = -1;
             }
             if (transform.position.z >= 225)
             {
-                //transform.position = new Vector3(transform.position.x, transform.position.y, -49);
                 feedLevel = -1;
             }
             if (transform.position.z <= -25)
             {
                 feedLevel = -1;
-                //transform.position = new Vector3(transform.position.x, transform.position.y, 249);
             }
 
             if (feedLevel >= -0.2f && feedLevel <= 0.2)
@@ -143,17 +90,6 @@ public class CreatureController : MonoBehaviour
             isDead = true;
             material.color = Color.black;
         }
-        //else
-        //{
-        //    GameObject.Destroy(this.gameObject);
-        //}
-
-
-        //}
-        //else
-        //{
-        //    creatureDeath(this.gameObject);
-        //}
     }
 
     /// <summary>
@@ -169,10 +105,8 @@ public class CreatureController : MonoBehaviour
     /// 2 = proximity (0 = nothing, 1 = food, -1 = other creature)
     /// </summary>
     private void ProcessInput()
-    {
+    {        
         float[] inputs = new float[numInputs];
-        //inputs[0] = feedLevel;
-        //inputs[1] = health;
 
         lookAt = (transform.forward).normalized;
 
@@ -215,75 +149,19 @@ public class CreatureController : MonoBehaviour
 
         float[] output = network.GetOutput(inputs);
 
-        //transform.Rotate(new Vector3(0, (output[0] - output[1]), 0) * Time.deltaTime * 10);
-
         output[0] = (2 * output[0]) - 1;
         output[1] = (2 * output[1]) - 1;
 
         transform.LookAt(transform.position + new Vector3(output[0], 0, output[1]) * Time.deltaTime);
         transform.Translate(new Vector3(0, 0, (output[2] - output[3])) * Time.deltaTime * 10);
 
-        //if (output[4] >= 0.5f)
-        //{
-        //    Breed();
-        //}
         if (output[4] >= 0.5f)
         {
             Attack();
         }
 
         Eat();
-
-
-        //Breed();
     }
-
-    private GameObject GetClosest(string tag)
-    {
-        var objects = GameObject.FindGameObjectsWithTag(tag);
-
-        if (objects == null || objects.Length == 0)
-        {
-            Debug.LogError("No object with tag " + tag + " found");
-            return null;
-        }
-
-        GameObject closest = null;
-        float distance = Mathf.Infinity;
-        Vector3 position = transform.position;
-        foreach (GameObject go in objects)
-        {
-            if (go != this.gameObject)
-            {
-                if (!tag.Equals("Creature") || !go.GetComponent<CreatureController>().isDead)
-                {
-                    Vector3 diff = go.transform.position - position;
-                    float curDistance = diff.sqrMagnitude;
-                    if (curDistance < distance)
-                    {
-                        closest = go;
-                        distance = curDistance;
-                    }
-                }
-            }
-        }
-
-        return closest;
-    }
-
-
-    //private int GetProximity()
-    //{
-    //    var colliders = Physics.OverlapSphere(this.transform.position, proximityRadius);
-    //    if (colliders.Any(c => c.tag.Equals("Food")))
-    //        return 1;
-    //    else if (colliders.Any(c => c.tag.Equals("Creature") && c.gameObject != this.gameObject))
-    //    {
-    //        return -1;
-    //    }
-    //    else
-    //        return 0;
-    //}
 
     private void OnDrawGizmos()
     {
@@ -307,8 +185,7 @@ public class CreatureController : MonoBehaviour
             other.feedLevel -= 0.1f;
             feedLevel += 0.1f;
 
-            other.feedLevel = Mathf.Clamp(other.feedLevel, -1, 1);
-            feedLevel = Mathf.Clamp(feedLevel, -1, 1);
+            attacked = true;
         }               
     }
 
@@ -323,31 +200,42 @@ public class CreatureController : MonoBehaviour
 
             feedLevel += 0.3f;
 
-            foodConsumed();
+            FoodConsumed();
         }
-        //else
-        //    feedLevel -= 0.05f;
-
-        feedLevel = Mathf.Clamp(feedLevel, -1, 1);
     }
 
-    public float[] GetGenome()
+    protected GameObject GetClosest(string tag)
     {
-        return network.GetGenome();
+        var objects = GameObject.FindGameObjectsWithTag(tag);
+
+        if (objects == null || objects.Length == 0)
+        {
+            Debug.LogError("No object with tag " + tag + " found");
+            return null;
+        }
+
+        
+        GameObject closest = null;
+        float distance = Mathf.Infinity;
+        Vector3 position = transform.position;
+        foreach (GameObject go in objects)
+        {
+            if (go != this.gameObject)
+            {
+                if (!tag.Equals("Creature") || !go.GetComponent<CreatureController>().isDead)
+                {
+                    Vector3 diff = go.transform.position - position;
+                    float curDistance = diff.sqrMagnitude;
+                    if (curDistance < distance)
+                    {
+                        closest = go;
+                        distance = curDistance;
+                    }
+                }
+            }
+        }
+
+        return closest;
     }
 
-    //private void Breed()
-    //{
-    //    if (breedTimer >= breedThreshold)
-    //    {
-    //        var genome = network.GetGenome();
-
-    //        breedTimer = 0;
-    //        //feedLevel -= 0.2f;
-
-    //        //feedLevel = Mathf.Clamp(feedLevel, 0, 1);
-
-    //        creatureBorn(genome, generation);
-    //    }
-    //}
 }

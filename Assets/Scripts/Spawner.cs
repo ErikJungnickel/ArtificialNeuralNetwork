@@ -23,7 +23,7 @@ public class Spawner : MonoBehaviour
     private Text globalStats;
 
     [HideInInspector]
-    public List<CreatureController> creatures;
+    public List<BaseController> creatures;
 
     private float genTimer;
     private float genThreshold = 180;
@@ -36,7 +36,7 @@ public class Spawner : MonoBehaviour
     {
         avgFitnesses = new List<float>();
 
-        creatures = new List<CreatureController>();
+        creatures = new List<BaseController>();
 
         globalStats = GetComponentInChildren<Text>();
 
@@ -49,7 +49,7 @@ public class Spawner : MonoBehaviour
         for (int i = 0; i < numCreatures; i++)
         {
             var creature = SpawnCreature();
-            creature.GetComponent<CreatureController>().Create();
+            creature.GetComponent<BaseController>().Create();
         }
 
         for (int i = 0; i < numFoods; i++)
@@ -59,19 +59,16 @@ public class Spawner : MonoBehaviour
 
         SetLabel();
 
-        //var go = GameObject.Find("NeuralNetworkPanel");
-        //creatures[0].network.DrawNetwork(go);
+        //creatures[0].network.DrawNetwork();
     }
 
     private GameObject SpawnCreature()
     {
         var creature = Instantiate(Creature, new Vector3(UnityEngine.Random.Range(0, 200), 0, UnityEngine.Random.Range(0, 200)), Creature.transform.rotation);
-        //((GameObject)creature).GetComponent<CreatureController>().creatureBorn += Spawner_creatureBorn;
-        //((GameObject)creature).GetComponent<CreatureController>().creatureDeath += Spawner_creatureDeath;
-        ((GameObject)creature).GetComponent<CreatureController>().foodConsumed += Spawner_foodConsumed;
+        ((GameObject)creature).GetComponent<BaseController>().foodConsumed += Spawner_foodConsumed;
         ((GameObject)creature).transform.parent = creatureParent.transform;
 
-        creatures.Add(((GameObject)creature).GetComponent<CreatureController>());
+        creatures.Add(((GameObject)creature).GetComponent<BaseController>());
 
         return (GameObject)creature;
     }
@@ -91,44 +88,12 @@ public class Spawner : MonoBehaviour
     private void SetLabel()
     {
         globalStats.text = "Gen: " + currentGeneration;
-        globalStats.text += "\nTime: " + Math.Round(genThreshold - genTimer,2 );
+        globalStats.text += "\nTime: " + Math.Round(genThreshold - genTimer, 2);
         globalStats.text += "\nTotal Avg Fitness: " + Math.Round((avgFitnesses.Any() ? Math.Round(avgFitnesses.Average(), 2) : 0), 2);
-        globalStats.text += "\nHighest Fitness: " + Math.Round(creatures.Select(c => c.fitness).ToList().Max(),2);
+        globalStats.text += "\nHighest Fitness: " + Math.Round(creatures.Select(c => c.fitness).ToList().Max(), 2);
         globalStats.text += "\nAvg Fitness: " + Math.Round(creatures.Select(c => c.fitness).ToList().Average(), 2);
         globalStats.text += "\nSpeed: " + Time.timeScale;
     }
-
-    //void Spawner_creatureDeath(GameObject go)
-    //{
-    //    creatures.Remove(go.GetComponent<CreatureController>());
-
-    //    GameObject.Destroy(go);
-    //    population--;
-
-    //    SetLabel();
-
-    //    if (population < numCreatures)
-    //    {
-    //        var creature = SpawnCreature();
-    //        creature.GetComponent<CreatureController>().Create();
-    //        population++;
-
-    //        SetLabel();
-    //    }
-    //}
-
-    //void Spawner_creatureBorn(float[] genome, int generation)
-    //{
-    //    if (generation + 1 > highestGen)
-    //    {
-    //        highestGen = generation + 1;
-    //    }
-    //    var creature = SpawnCreature();
-    //    creature.GetComponent<CreatureController>().Create(genome, generation);
-    //    population++;
-
-    //    SetLabel();
-    //}
 
     // Update is called once per frame
     void Update()
@@ -148,7 +113,7 @@ public class Spawner : MonoBehaviour
             genTimer = 0;
         }
         if (Input.GetKeyUp(KeyCode.N))
-        {            
+        {
             CreateNewGeneration();
             genTimer = 0;
         }
@@ -169,7 +134,7 @@ public class Spawner : MonoBehaviour
         //get fittest  two creatures
         var orderedCreatures = creatures.OrderByDescending(c => c.fitness).ToList();
         //Get the numCreatures/4 fittest 
-        var fittest = new List<CreatureController>();
+        var fittest = new List<BaseController>();
         for (int i = 0; i < numCreatures / 4; i++)
         {
             var creatureToAdd = orderedCreatures[i];
@@ -179,13 +144,14 @@ public class Spawner : MonoBehaviour
         //var father = orderedCreatures[0];
         //var mother = orderedCreatures[1];
 
-        //List<CreatureController> fittest = new List<CreatureController>();
+        //List<BaseController> fittest = new List<BaseController>();
         //for (int i = 0; i < 2; i++)
         //{
         //    fittest.Add(orderedCreatures[i]);
         //}
 
-        Debug.Log("Gen " + currentGeneration + " : Highest: " + orderedCreatures[0].fitness + " Median: " + Math.Round(creatures.Select(c => c.fitness).ToList().Average(), 2));
+        Debug.Log("Gen " + currentGeneration + " : Highest: " + orderedCreatures[0].fitness + " Median: " + Math.Round(creatures.Select(c => c.fitness).ToList().Average(), 2) +
+            " Aggro Rate: " + ((float)creatures.Where(c => c.attacked == true).Count() / (float)creatures.Count) * 100.0f + "%");
         avgFitnesses.Add((float)creatures.Select(c => c.fitness).ToList().Average());
 
         creatures.ForEach(c => Destroy(c.gameObject));
@@ -200,7 +166,7 @@ public class Spawner : MonoBehaviour
             var father = fittest[UnityEngine.Random.Range(0, fittest.Count)];
             var mother = fittest[UnityEngine.Random.Range(0, fittest.Count)];
 
-            creatureGo.GetComponent<CreatureController>().Create(father.GetGenome(), mother.GetGenome());
+            creatureGo.GetComponent<BaseController>().Create(father.GetGenome(), mother.GetGenome());
 
             creatureCount++;
         } while (creatureCount < numCreatures);
@@ -211,7 +177,7 @@ public class Spawner : MonoBehaviour
         //    for (int i = 0; i < numCreatures; i++)
         //    {
         //        var creature = SpawnCreature();
-        //        creature.GetComponent<CreatureController>().Create();
+        //        creature.GetComponent<BaseController>().Create();
         //    }
         //}
         //else
@@ -220,7 +186,7 @@ public class Spawner : MonoBehaviour
         //    do
         //    {
         //        var creatureGo = SpawnCreature();
-        //        creatureGo.GetComponent<CreatureController>().Create(father.GetGenome(), mother.GetGenome());
+        //        creatureGo.GetComponent<BaseController>().Create(father.GetGenome(), mother.GetGenome());
         //        creatureCount++;
         //    } while (creatureCount < numCreatures);
         //}
