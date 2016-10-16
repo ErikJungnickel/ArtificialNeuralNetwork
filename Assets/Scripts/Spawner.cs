@@ -58,6 +58,9 @@ public class Spawner : MonoBehaviour
         }
 
         SetLabel();
+
+        //var go = GameObject.Find("NeuralNetworkPanel");
+        //creatures[0].network.DrawNetwork(go);
     }
 
     private GameObject SpawnCreature()
@@ -88,15 +91,11 @@ public class Spawner : MonoBehaviour
     private void SetLabel()
     {
         globalStats.text = "Gen: " + currentGeneration;
+        globalStats.text += "\nTime: " + Math.Round(genThreshold - genTimer,2 );
         globalStats.text += "\nTotal Avg Fitness: " + Math.Round((avgFitnesses.Any() ? Math.Round(avgFitnesses.Average(), 2) : 0), 2);
         globalStats.text += "\nHighest Fitness: " + Math.Round(creatures.Select(c => c.fitness).ToList().Max(),2);
         globalStats.text += "\nAvg Fitness: " + Math.Round(creatures.Select(c => c.fitness).ToList().Average(), 2);
         globalStats.text += "\nSpeed: " + Time.timeScale;
-
-        //globalStats.text = "Pop: " + population;
-        //globalStats.text += "\nHighest Gen: " + highestGen;
-        //globalStats.text += "\nHighest alive: " + creatures.Select(c => c.generation).ToList().Max();
-        //globalStats.text += "\nMedian Gen: " + Math.Round(creatures.Select(c => c.generation).ToList().Average(), 2);
     }
 
     //void Spawner_creatureDeath(GameObject go)
@@ -145,6 +144,11 @@ public class Spawner : MonoBehaviour
         }
         if (genTimer >= genThreshold)
         {
+            CreateNewGeneration();
+            genTimer = 0;
+        }
+        if (Input.GetKeyUp(KeyCode.N))
+        {            
             CreateNewGeneration();
             genTimer = 0;
         }

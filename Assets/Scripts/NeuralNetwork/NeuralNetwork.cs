@@ -96,10 +96,10 @@ public class NeuralNetwork
 
     public float[] GetOutput(float[] input)
     {
-        if (input.Any(i => i < -1 || i > 1))
-        {
-            Debug.LogError("input not normalized");
-        }
+        //if (input.Any(i => i < -1 || i > 1))
+        //{
+        //    Debug.LogError("input not normalized");
+        //}
         float[] output = new float[numOutputs];
 
         List<float> inputs = new List<float>(input);
@@ -110,5 +110,17 @@ public class NeuralNetwork
         }
 
         return inputs.ToArray();
+    }
+
+    public void DrawNetwork(GameObject go)
+    {        
+        if (go.GetComponent<LineRenderer>() == null)
+        {
+            LineRenderer l = go.AddComponent<LineRenderer>();
+            l.SetVertexCount(2);
+            l.useWorldSpace = false;
+            l.SetPosition(0, new Vector3(0, 0, 1));
+            l.SetPosition(0, new Vector3(100, 100, 1));
+        }        
     }
 }
