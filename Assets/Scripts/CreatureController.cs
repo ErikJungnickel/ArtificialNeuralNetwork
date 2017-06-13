@@ -26,10 +26,12 @@ public class CreatureController : BaseController
     
     void Awake()
     {        
-        numInputs = 11;
+        numInputs = 14;
         numOutputs = 5;
+        //numHiddenLayers = 1;
+        //numNeurons = 8;
         numHiddenLayers = 1;
-        numNeurons = 8;
+        numNeurons = 10;
 
         feedLevel = 0;
 
@@ -43,6 +45,7 @@ public class CreatureController : BaseController
     {
         if (feedLevel > -1.0f && feedLevel < 1.0f)
         {
+            //Increase fitness
             tickTimer += Time.deltaTime;
             if (tickTimer >= tick)
             {
@@ -50,6 +53,7 @@ public class CreatureController : BaseController
                 fitness += 1 * Time.deltaTime;
             }
 
+            //Decrease feed level
             feedLevel -= 0.05f * Time.deltaTime;
 
             ProcessInput();
@@ -61,6 +65,7 @@ public class CreatureController : BaseController
                 labelTimer = 0;
             }
 
+            //Kill creature on the edges
             if (transform.position.x >= 225)
             {
                 feedLevel = -1;
@@ -78,12 +83,21 @@ public class CreatureController : BaseController
                 feedLevel = -1;
             }
 
+            //Coloring based on feed level
             if (feedLevel >= -0.2f && feedLevel <= 0.2)
                 material.color = Color.green;
             else if (feedLevel >= -0.5f && feedLevel <= 0.5)
                 material.color = Color.yellow;
             else if (feedLevel > -1 && feedLevel < 1)
                 material.color = Color.red;
+
+            var colliders = Physics.OverlapSphere(this.transform.position, proximityRadius);
+
+            var deathZone = colliders.FirstOrDefault(c => c.tag.Equals("DeathZone"));
+            if (deathZone != null)
+            {
+                feedLevel = -1;
+            }
         }
         else
         {
@@ -106,12 +120,24 @@ public class CreatureController : BaseController
     /// </summary>
     private void ProcessInput()
     {        
+        //TODO sort input params
+
         float[] inputs = new float[numInputs];
 
         lookAt = (transform.forward).normalized;
 
         inputs[0] = lookAt.x;
         inputs[1] = lookAt.y;
+
+        //Closest Death Zone
+        var closestDeathZoneGo = GetClosest("DeathZone");
+        Vector3 closestDeathZone = (closestDeathZoneGo.transform.position - transform.position).normalized;
+
+        float distToDeathZone = Vector3.Distance(transform.position.normalized, closestDeathZoneGo.transform.position.normalized);    
+
+        inputs[11] = closestDeathZone.x;
+        inputs[12] = closestDeathZone.y;
+        inputs[13] = distToDeathZone;
 
         //Closest Food
         var closestFoodGo = GetClosest("Food");

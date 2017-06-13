@@ -4,14 +4,17 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.IO;
 
 public class Spawner : MonoBehaviour
 {
     public int numCreatures;
     public int numFoods;
+    public int numDeathZones;
 
     public GameObject Creature;
     public GameObject Food;
+    public GameObject Death;
 
     private int population;
     private int foodCount;
@@ -57,9 +60,78 @@ public class Spawner : MonoBehaviour
             SpawnFood();
         }
 
+        for (int i = 0; i < numDeathZones; i++)
+        {
+            SpawnDeathZone();
+        }
+
         SetLabel();
 
         //creatures[0].network.DrawNetwork();
+    }
+
+    public void SaveCurrentGeneration()
+    {
+        string content = currentGeneration + ";";
+
+        foreach (BaseController c in creatures)
+        {
+            content += string.Join(",", c.GetGenome().Select(f => f.ToString()).ToArray());
+            content += ";";
+        }
+
+        //System.IO.File.WriteAllText("save " + DateTime.Now.ToString("dd_MM_yyyy HH_mm") + ".ann", content);
+        System.IO.File.WriteAllText("save.ann", content);
+    }
+
+    public void LoadGeneration()
+    {
+        var stream = System.IO.File.Open("save.ann", System.IO.FileMode.Open);
+        var streamReader = new StreamReader(stream);
+
+        var content = streamReader.ReadToEnd();
+        var splitContent = content.Split(';');
+
+        currentGeneration = float.Parse(splitContent[0]);
+
+        var foods = GameObject.FindGameObjectsWithTag("Food");
+        for (int i = 0; i < foods.Length; i++)
+        {
+            Destroy(foods[i]);
+        }
+        for (int i = 0; i < numFoods; i++)
+        {
+            SpawnFood();
+        }
+
+        var deathZones = GameObject.FindGameObjectsWithTag("DeathZone");
+        for (int i = 0; i < deathZones.Length; i++)
+        {
+            Destroy(deathZones[i]);
+        }
+        for (int i = 0; i < numDeathZones; i++)
+        {
+            SpawnDeathZone();
+        }
+
+        creatures.ForEach(c => Destroy(c.gameObject));
+        creatures.Clear();
+
+        for (int i = 1; i < splitContent.Length; i++)
+        {
+            if (string.IsNullOrEmpty(splitContent[i]))
+            {
+                continue;
+            }
+            var genome_s = splitContent[i].ToString().Split(',');
+            var genome = genome_s.Select(s => float.Parse(s)).ToArray();
+
+            var creatureGo = SpawnCreature();
+
+            creatureGo.GetComponent<BaseController>().Create(genome);
+        }
+
+        genTimer = 0;
     }
 
     private GameObject SpawnCreature()
@@ -77,6 +149,12 @@ public class Spawner : MonoBehaviour
     {
         var food = Instantiate(Food, new Vector3(UnityEngine.Random.Range(0, 200), 0, UnityEngine.Random.Range(0, 200)), new Quaternion());
         ((GameObject)food).transform.parent = foodParent.transform;
+    }
+
+    private void SpawnDeathZone()
+    {
+        var deathZone = Instantiate(Death, new Vector3(UnityEngine.Random.Range(0, 200), 0, UnityEngine.Random.Range(0, 200)), new Quaternion());
+        ((GameObject)deathZone).transform.parent = foodParent.transform;
     }
 
     void Spawner_foodConsumed()
@@ -129,6 +207,16 @@ public class Spawner : MonoBehaviour
         for (int i = 0; i < numFoods; i++)
         {
             SpawnFood();
+        }
+
+        var deathZones = GameObject.FindGameObjectsWithTag("DeathZone");
+        for (int i = 0; i < deathZones.Length; i++)
+        {
+            Destroy(deathZones[i]);
+        }
+        for (int i = 0; i < numDeathZones; i++)
+        {
+            SpawnDeathZone();
         }
 
         //get fittest  two creatures

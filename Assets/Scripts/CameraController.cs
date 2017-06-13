@@ -6,6 +6,7 @@ public class CameraController : MonoBehaviour
 {
     private float prevScale = 1;
     bool follow = false;
+
     // Use this for initialization
     void Start()
     {
@@ -25,18 +26,26 @@ public class CameraController : MonoBehaviour
 
         if (Input.GetKey(KeyCode.D))
         {
+            follow = false;
+                 
             transform.Translate(new Vector3(1, 0, 0));
         }
         if (Input.GetKey(KeyCode.A))
         {
+            follow = false;
+
             transform.Translate(new Vector3(-1, 0, 0));
         }
         if (Input.GetKey(KeyCode.W))
         {
+            follow = false;
+
             transform.Translate(new Vector3(0, 1, 0));
         }
         if (Input.GetKey(KeyCode.S))
         {
+            follow = false;
+
             transform.Translate(new Vector3(0, -1, 0));
         }
         if (Input.GetKeyUp(KeyCode.F))
@@ -69,6 +78,16 @@ public class CameraController : MonoBehaviour
         if (Input.GetAxis("Mouse ScrollWheel") > 0)
         {
             Camera.main.orthographicSize -= 2;
+        }
+        if (Input.GetKeyUp(KeyCode.F5))
+        {
+            var spawner = GameObject.FindObjectOfType<Spawner>();
+            spawner.SaveCurrentGeneration();
+        }
+        if (Input.GetKeyUp(KeyCode.F9))
+        {
+            var spawner = GameObject.FindObjectOfType<Spawner>();
+            spawner.LoadGeneration();
         }
     }
 }

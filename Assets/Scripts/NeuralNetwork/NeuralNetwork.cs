@@ -35,6 +35,27 @@ public class NeuralNetwork
         layers.Add(new Layer(numOutputs, numNeurons, LayerType.OUTPUT));
     }
 
+    public NeuralNetwork(int numInputs, int numOutputs, int numHiddenLayers, int numNeurons, float[] loadedGenome)
+    : this(numInputs, numOutputs, numHiddenLayers, numNeurons)
+    {
+        int genomeCounter = 0;
+
+        foreach (Layer layer in layers)
+        {
+            foreach (Neuron neuron in layer.neurons)
+            {
+                for (int i = 0; i < neuron.inputWeights.Length; i++)
+                {
+                    float genome = loadedGenome[genomeCounter];
+
+                    neuron.inputWeights[i] = genome;
+
+                    genomeCounter++;
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// Initialize the network with the passed genome
     /// </summary>

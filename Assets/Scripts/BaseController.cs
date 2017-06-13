@@ -31,6 +31,11 @@ public class BaseController : MonoBehaviour
         network = new NeuralNetwork(numInputs, numOutputs, numHiddenLayers, numNeurons, genomeFather, genomeMother);        
     }
 
+    public void Create(float[] genome)
+    {
+        network = new NeuralNetwork(numInputs, numOutputs, numHiddenLayers, numNeurons, genome);
+    }
+
     public float[] GetGenome()
     {
         return network.GetGenome();
