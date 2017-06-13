@@ -80,7 +80,7 @@ public class NeuralNetwork
 
                     neuron.inputWeights[i] = genome;
 
-                    if (Random.value >= 0.5f)
+                    if (Random.value >= 0.1f)
                     {
                         float mutation = Random.Range(-mutationRate, mutationRate);
 

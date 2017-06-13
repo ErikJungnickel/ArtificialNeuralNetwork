@@ -28,8 +28,6 @@ public class CreatureController : BaseController
     {        
         numInputs = 14;
         numOutputs = 5;
-        //numHiddenLayers = 1;
-        //numNeurons = 8;
         numHiddenLayers = 1;
         numNeurons = 10;
 
